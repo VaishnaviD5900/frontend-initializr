@@ -10,6 +10,14 @@ import { buildFileTree } from './utils/buildFileTree'
 // ── devicon helper ────────────────────────────────────────────────────────────
 
 function DevIcon({ name, size = 26 }: { name: string; size?: number }) {
+  if (!name) return (
+    <div
+      className="flex items-center justify-center rounded-lg font-mono font-bold"
+      style={{ width: size, height: size, fontSize: size * 0.6, background: 'rgba(255,255,255,0.06)', color: '#475569' }}
+    >
+      —
+    </div>
+  )
   return <i className={`devicon-${name}-plain colored`} style={{ fontSize: size }} />
 }
 
@@ -36,14 +44,14 @@ const PACKAGE_MANAGERS: { value: PackageManager; label: string; icon: string; de
 const LINTING_OPTIONS: { value: Linting; label: string; icon: string; desc: string }[] = [
   { value: 'eslint+prettier', label: 'ESLint + Prettier', icon: 'eslint',     desc: 'Lint & format' },
   { value: 'eslint',          label: 'ESLint only',       icon: 'eslint',     desc: 'Lint only' },
-  { value: 'none',            label: 'None',              icon: 'javascript', desc: 'No linting' },
+  { value: 'none',            label: 'None',              icon: '',           desc: 'No linting' },
 ]
 
 const TESTING_OPTIONS: { value: Testing; label: string; icon: string; desc: string }[] = [
   { value: 'vitest',  label: 'Vitest',  icon: 'vite',       desc: 'Fast · Vite-native' },
   { value: 'jest',    label: 'Jest',    icon: 'jest',        desc: 'Battle-tested' },
-  { value: 'cypress', label: 'Cypress', icon: 'javascript',  desc: 'E2E · Real browser' },
-  { value: 'none',    label: 'None',    icon: 'javascript',  desc: 'No testing setup' },
+  { value: 'cypress', label: 'Cypress', icon: 'cypressio',   desc: 'E2E · Real browser' },
+  { value: 'none',    label: 'None',    icon: '',            desc: 'No testing setup' },
 ]
 
 const STYLING_OPTIONS: Record<Framework, { value: Styling; label: string; icon: string; desc: string }[]> = {
