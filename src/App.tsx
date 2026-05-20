@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Download, Code2, Layers, Palette, GitBranch, Database, CheckCircle2, Package, Wrench, ShieldCheck, FlaskConical } from 'lucide-react'
 import type { ProjectConfig, Framework, Styling, Routing, StateManagement, BuildTool, PackageManager, Linting, Testing } from './types'
+import { FileTree } from './components/FileTree'
+import { buildFileTree } from './utils/buildFileTree'
 import { DEFAULT_CONFIG } from './types'
 import { generateProject } from './generators/projectGenerator'
 
@@ -436,10 +438,11 @@ export default function App() {
         </div>
 
         {/* Summary sidebar */}
-        <div className="col-span-1">
+        <div className="col-span-1 space-y-4">
           <SummaryPanel cfg={cfg} onGenerate={handleGenerate} loading={loading} />
+          <FileTree tree={buildFileTree(cfg)} />
           {done && (
-            <div className="mt-4 px-4 py-3 rounded-xl text-sm flex items-center gap-2"
+            <div className="px-4 py-3 rounded-xl text-sm flex items-center gap-2"
               style={{ background: T.accentDim, border: `1px solid ${T.accentBorder}`, color: T.accent }}>
               <CheckCircle2 size={14} />
               <span>
