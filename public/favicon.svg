@@ -1,4 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="8" fill="#0891b2"/>
-  <text x="5" y="23" font-family="monospace" font-size="20" font-weight="bold" fill="#e0f7fa">&lt;/&gt;</text>
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#0891b2"/>
+    </linearGradient>
+  </defs>
+  <!-- rounded square background matching header logo -->
+  <rect width="32" height="32" rx="8" fill="url(#g)"/>
+  <!-- layers icon: 3 stacked strokes, centered, matching lucide Layers -->
+  <!-- bottom layer -->
+  <polyline points="4,21 16,27 28,21" fill="none" stroke="#041e2b" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- middle layer -->
+  <polyline points="4,16 16,22 28,16" fill="none" stroke="#041e2b" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- top layer / diamond -->
+  <polygon points="16,5 28,11 16,17 4,11" fill="none" stroke="#041e2b" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>
