@@ -1,5 +1,5 @@
 import JSZip from 'jszip'
-import type { ProjectConfig, Framework, Styling } from '../types'
+import type { ProjectConfig } from '../types'
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -90,8 +90,7 @@ function buildPackageJson(cfg: ProjectConfig): string {
 // ── vite config ──────────────────────────────────────────────────────────────
 
 function buildViteConfig(cfg: ProjectConfig): string {
-  const { framework, typescript } = cfg
-  const e = ext(typescript)
+  const { framework } = cfg
 
   if (framework === 'react') {
     return `import { defineConfig } from 'vite'
@@ -152,9 +151,7 @@ export default {
 // ── App component ─────────────────────────────────────────────────────────────
 
 function buildReactApp(cfg: ProjectConfig): string {
-  const { styling, routing, typescript } = cfg
-  const e = extx(typescript)
-  const hasRouter = routing !== 'none'
+  const { routing } = cfg
 
   if (routing === 'react-router') {
     return `import { BrowserRouter, Routes, Route } from 'react-router-dom'
@@ -289,7 +286,7 @@ export type RootState = ReturnType<typeof store.getState>
 export type AppDispatch = typeof store.dispatch` : ''}\n`
 }
 
-function buildReduxSlice(typescript: boolean): string {
+function buildReduxSlice(_typescript: boolean): string {
   return `import { createSlice } from '@reduxjs/toolkit'
 
 const counterSlice = createSlice({
@@ -305,7 +302,7 @@ export const { increment, decrement } = counterSlice.actions
 export default counterSlice.reducer\n`
 }
 
-function buildPiniaStore(typescript: boolean): string {
+function buildPiniaStore(_typescript: boolean): string {
   return `import { defineStore } from 'pinia'
 
 export const useAppStore = defineStore('app', {
@@ -322,7 +319,7 @@ export const useAppStore = defineStore('app', {
 // ── main entry ───────────────────────────────────────────────────────────────
 
 function buildReactMain(cfg: ProjectConfig): string {
-  const { styling, stateManagement, routing } = cfg
+  const { styling, stateManagement } = cfg
   const lines: string[] = ["import React from 'react'", "import ReactDOM from 'react-dom/client'", "import App from './App'"]
 
   if (styling === 'tailwind') lines.push("import './index.css'")
@@ -380,7 +377,7 @@ function buildVueMain(cfg: ProjectConfig): string {
 
 // ── vue router ───────────────────────────────────────────────────────────────
 
-function buildVueRouter(cfg: ProjectConfig): string {
+function buildVueRouter(_cfg: ProjectConfig): string {
   return `import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../pages/Home.vue'
 
