@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Download, Code2, Layers, Palette, GitBranch, Database, CheckCircle2, Package, Wrench, ShieldCheck, FlaskConical, FolderOpen, AlertCircle } from 'lucide-react'
-import type { ProjectConfig, Framework, Styling, Routing, StateManagement, BuildTool, PackageManager, Linting, Testing } from './types'
+import { Download, Code2, Palette, GitBranch, Database, CheckCircle2, Package, Wrench, ShieldCheck, FlaskConical, FolderOpen, AlertCircle, BookCheck } from 'lucide-react'
+import type { ProjectConfig, Framework, Styling, Routing, StateManagement, BuildTool, PackageManager, Linting, Testing, Validation } from './types'
 import { DEFAULT_CONFIG } from './types'
 import { generateProject } from './generators/projectGenerator'
 import { FileTreeModal } from './components/FileTreeModal'
@@ -10,6 +10,14 @@ import { buildFileTree } from './utils/buildFileTree'
 // ── devicon helper ────────────────────────────────────────────────────────────
 
 function DevIcon({ name, size = 26 }: { name: string; size?: number }) {
+  if (!name) return (
+    <div
+      className="flex items-center justify-center rounded-lg font-mono font-bold"
+      style={{ width: size, height: size, fontSize: size * 0.6, background: 'rgba(255,255,255,0.06)', color: '#475569' }}
+    >
+      —
+    </div>
+  )
   return <i className={`devicon-${name}-plain colored`} style={{ fontSize: size }} />
 }
 
@@ -36,14 +44,21 @@ const PACKAGE_MANAGERS: { value: PackageManager; label: string; icon: string; de
 const LINTING_OPTIONS: { value: Linting; label: string; icon: string; desc: string }[] = [
   { value: 'eslint+prettier', label: 'ESLint + Prettier', icon: 'eslint',     desc: 'Lint & format' },
   { value: 'eslint',          label: 'ESLint only',       icon: 'eslint',     desc: 'Lint only' },
-  { value: 'none',            label: 'None',              icon: 'javascript', desc: 'No linting' },
+  { value: 'none',            label: 'None',              icon: '',           desc: 'No linting' },
 ]
 
 const TESTING_OPTIONS: { value: Testing; label: string; icon: string; desc: string }[] = [
   { value: 'vitest',  label: 'Vitest',  icon: 'vite',       desc: 'Fast · Vite-native' },
   { value: 'jest',    label: 'Jest',    icon: 'jest',        desc: 'Battle-tested' },
-  { value: 'cypress', label: 'Cypress', icon: 'javascript',  desc: 'E2E · Real browser' },
-  { value: 'none',    label: 'None',    icon: 'javascript',  desc: 'No testing setup' },
+  { value: 'cypress', label: 'Cypress', icon: 'cypressio',   desc: 'E2E · Real browser' },
+  { value: 'none',    label: 'None',    icon: '',            desc: 'No testing setup' },
+]
+
+const VALIDATION_OPTIONS: { value: Validation; label: string; icon: string; desc: string }[] = [
+  { value: 'zod',     label: 'Zod',     icon: 'typescript', desc: 'TypeScript-first schema' },
+  { value: 'yup',     label: 'Yup',     icon: 'javascript', desc: 'Classic · Works with Formik' },
+  { value: 'valibot', label: 'Valibot', icon: 'javascript', desc: 'Lightweight Zod alternative' },
+  { value: 'none',    label: 'None',    icon: '',           desc: 'No validation lib' },
 ]
 
 const STYLING_OPTIONS: Record<Framework, { value: Styling; label: string; icon: string; desc: string }[]> = {
@@ -204,6 +219,7 @@ function SummaryPanel({
     { label: 'Pkg Manager', value: cfg.packageManager },
     { label: 'Linting',     value: cfg.linting },
     { label: 'Testing',     value: cfg.testing },
+    { label: 'Validation',  value: cfg.validation },
   ]
 
   const pm         = cfg.packageManager
@@ -368,9 +384,9 @@ export default function App() {
       <header className="relative border-b px-4 md:px-8 py-4 flex items-center justify-between"
         style={{ borderColor: T.border, background: 'rgba(255,255,255,0.02)' }}>
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #22d3ee, #0891b2)' }}>
-            <Layers size={15} color="#041e2b" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0 font-mono font-bold text-xs"
+            style={{ background: 'linear-gradient(135deg, #22d3ee, #0891b2)', color: '#041e2b' }}>
+            &lt;/&gt;
           </div>
           <div>
             <div className="font-mono font-semibold text-sm" style={{ color: '#f1f5f9' }}>Frontend Initializr</div>
@@ -532,6 +548,19 @@ export default function App() {
                   <DevIcon name={t.icon} size={24} />
                   <div className="font-semibold text-sm mt-2 mb-0.5" style={{ color: '#f1f5f9' }}>{t.label}</div>
                   <div className="text-xs" style={{ color: T.muted }}>{t.desc}</div>
+                </OptionCard>
+              ))}
+            </div>
+          </Section>
+
+          {/* Step 10 — Validation */}
+          <Section step={10} icon={<BookCheck size={13} />} title="Validation">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {VALIDATION_OPTIONS.map(v => (
+                <OptionCard key={v.value} selected={cfg.validation === v.value} onClick={() => set('validation', v.value)}>
+                  <DevIcon name={v.icon} size={24} />
+                  <div className="font-semibold text-sm mt-2 mb-0.5" style={{ color: '#f1f5f9' }}>{v.label}</div>
+                  <div className="text-xs" style={{ color: T.muted }}>{v.desc}</div>
                 </OptionCard>
               ))}
             </div>

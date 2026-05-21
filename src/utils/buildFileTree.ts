@@ -10,7 +10,7 @@ const ex = (ts: boolean) => ts ? 'tsx' : 'jsx'
 const s  = (ts: boolean) => ts ? 'ts'  : 'js'
 
 export function buildFileTree(cfg: ProjectConfig): TreeNode {
-  const { projectName, framework, typescript: ts, styling, routing, stateManagement, linting, testing, buildTool } = cfg
+  const { projectName, framework, typescript: ts, styling, routing, stateManagement, linting, testing, buildTool, validation } = cfg
 
   const root: TreeNode = { name: projectName, type: 'folder', children: [] }
 
@@ -42,6 +42,12 @@ export function buildFileTree(cfg: ProjectConfig): TreeNode {
   if (testing === 'vitest' || testing === 'jest') {
     srcChildren.push({ name: '__tests__', type: 'folder', children: [
       { name: `example.test.${s(ts)}`, type: 'file' }
+    ]})
+  }
+
+  if (validation !== 'none') {
+    srcChildren.push({ name: 'schemas', type: 'folder', children: [
+      { name: `userSchema.${s(ts)}`, type: 'file' }
     ]})
   }
 

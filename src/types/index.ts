@@ -6,6 +6,7 @@ export type BuildTool = 'vite' | 'webpack' | 'parcel'
 export type PackageManager = 'npm' | 'pnpm' | 'yarn'
 export type Linting = 'eslint' | 'eslint+prettier' | 'none'
 export type Testing = 'vitest' | 'jest' | 'cypress' | 'none'
+export type Validation = 'zod' | 'yup' | 'valibot' | 'none'
 
 export interface ProjectConfig {
   projectName: string
@@ -18,6 +19,7 @@ export interface ProjectConfig {
   packageManager: PackageManager
   linting: Linting
   testing: Testing
+  validation: Validation
 }
 
 export const DEFAULT_CONFIG: ProjectConfig = {
@@ -31,4 +33,5 @@ export const DEFAULT_CONFIG: ProjectConfig = {
   packageManager: 'npm',
   linting: 'eslint+prettier',
   testing: 'vitest',
+  validation: 'zod',
 }

@@ -9,7 +9,7 @@ const extx = (ts: boolean) => (ts ? 'tsx' : 'jsx')
 // ── package.json ─────────────────────────────────────────────────────────────
 
 function buildPackageJson(cfg: ProjectConfig): string {
-  const { projectName, buildTool, framework, styling, typescript, routing, stateManagement, linting, testing } = cfg
+  const { projectName, buildTool, framework, styling, typescript, routing, stateManagement, linting, testing, validation } = cfg
 
   const deps: Record<string, string> = {}
   const devDeps: Record<string, string> = {}
@@ -97,6 +97,11 @@ function buildPackageJson(cfg: ProjectConfig): string {
   if (testing === 'cypress') {
     devDeps['cypress'] = '^13.13.0'
   }
+
+  // Validation
+  if (validation === 'zod')      deps['zod']      = '^3.23.8'
+  if (validation === 'yup')      deps['yup']      = '^1.4.0'
+  if (validation === 'valibot')  deps['valibot']  = '^0.31.0'
 
   const scripts: Record<string, string> =
     framework === 'angular'
@@ -595,6 +600,15 @@ export async function generateProject(cfg: ProjectConfig): Promise<Blob> {
     root.file('ANGULAR_NOTE.md', `# Angular Project\n\nRun the following to create your Angular project with the selected options:\n\n\`\`\`bash\nnpx @angular/cli new ${cfg.projectName} ${ts ? '' : '--no-strict '}--routing=${cfg.routing !== 'none'} --style=${cfg.styling === 'angular-material' ? 'scss' : 'css'}\n\`\`\`\n\nThen install Angular Material if selected:\n\`\`\`bash\nng add @angular/material\n\`\`\`\n`)
   }
 
+  // Validation schema example
+  if (cfg.validation !== 'none') {
+    const schemas = src.folder('schemas')!
+    const ts = cfg.typescript
+    if (cfg.validation === 'zod')     schemas.file(`userSchema.${ts ? 'ts' : 'js'}`, buildZodSchema(ts))
+    if (cfg.validation === 'yup')     schemas.file(`userSchema.${ts ? 'ts' : 'js'}`, buildYupSchema())
+    if (cfg.validation === 'valibot') schemas.file(`userSchema.${ts ? 'ts' : 'js'}`, buildValibotSchema(ts))
+  }
+
   // Linting
   if (cfg.linting === 'eslint' || cfg.linting === 'eslint+prettier') {
     root.file('.eslintrc.cjs', buildEslintConfig(cfg))
@@ -736,4 +750,43 @@ function buildCypressExample(): string {
     cy.contains('h1').should('exist')
   })
 })\n`
+}
+
+// ── validation schema examples ────────────────────────────────────────────────
+
+function buildZodSchema(typescript: boolean): string {
+  return `import { z } from 'zod'
+
+export const userSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Invalid email address'),
+  age: z.number().min(18, 'Must be at least 18'),
+})
+
+${typescript ? 'export type User = z.infer<typeof userSchema>' : ''}
+`
+}
+
+function buildYupSchema(): string {
+  return `import * as yup from 'yup'
+
+export const userSchema = yup.object({
+  name: yup.string().min(2, 'Name must be at least 2 characters').required(),
+  email: yup.string().email('Invalid email address').required(),
+  age: yup.number().min(18, 'Must be at least 18').required(),
+})
+`
+}
+
+function buildValibotSchema(typescript: boolean): string {
+  return `import { object, string, number, minLength, minValue, email${typescript ? ', InferOutput' : ''} } from 'valibot'
+
+export const userSchema = object({
+  name: string([minLength(2, 'Name must be at least 2 characters')]),
+  email: string([email('Invalid email address')]),
+  age: number([minValue(18, 'Must be at least 18')]),
+})
+
+${typescript ? 'export type User = InferOutput<typeof userSchema>' : ''}
+`
 }
