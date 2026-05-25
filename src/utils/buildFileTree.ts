@@ -10,14 +10,17 @@ const ex = (ts: boolean) => ts ? 'tsx' : 'jsx'
 const s  = (ts: boolean) => ts ? 'ts'  : 'js'
 
 export function buildFileTree(cfg: ProjectConfig): TreeNode {
-  const { projectName, framework, typescript: ts, styling, routing, stateManagement, linting, testing, buildTool, validation } = cfg
+  const { projectName, framework, typescript: ts, styling, routing, stateManagement, linting, testing, buildTool, validation, httpClient, formLibrary } = cfg
 
   const root: TreeNode = { name: projectName, type: 'folder', children: [] }
 
   // ── src ──────────────────────────────────────────────────────────────────────
   const srcChildren: TreeNode[] = []
 
-  srcChildren.push({ name: 'components', type: 'folder', children: [] })
+  const componentFiles = formLibrary !== 'none'
+    ? [{ name: framework === 'vue' ? 'ExampleForm.vue' : `ExampleForm.${ex(ts)}`, type: 'file' as const }]
+    : []
+  srcChildren.push({ name: 'components', type: 'folder', children: componentFiles })
   srcChildren.push({
     name: 'pages', type: 'folder', children: [
       { name: framework === 'vue' ? 'Home.vue' : `Home.${ex(ts)}`, type: 'file' }
@@ -43,6 +46,11 @@ export function buildFileTree(cfg: ProjectConfig): TreeNode {
     srcChildren.push({ name: '__tests__', type: 'folder', children: [
       { name: `example.test.${s(ts)}`, type: 'file' }
     ]})
+  }
+
+  if (httpClient !== 'none') {
+    const fileName = httpClient === 'tanstack-query' ? `queryClient.${s(ts)}` : httpClient === 'swr' ? `fetcher.${s(ts)}` : `client.${s(ts)}`
+    srcChildren.push({ name: 'api', type: 'folder', children: [{ name: fileName, type: 'file' }] })
   }
 
   if (validation !== 'none') {

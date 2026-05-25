@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Download, Code2, Palette, GitBranch, Database, CheckCircle2, Package, Wrench, ShieldCheck, FlaskConical, FolderOpen, AlertCircle, BookCheck } from 'lucide-react'
-import type { ProjectConfig, Framework, Styling, Routing, StateManagement, BuildTool, PackageManager, Linting, Testing, Validation } from './types'
+import { Download, Code2, Palette, GitBranch, Database, CheckCircle2, Package, Wrench, ShieldCheck, FlaskConical, FolderOpen, AlertCircle, BookCheck, Globe, ClipboardList } from 'lucide-react'
+import type { ProjectConfig, Framework, Styling, Routing, StateManagement, BuildTool, PackageManager, Linting, Testing, Validation, HttpClient, FormLibrary } from './types'
 import { DEFAULT_CONFIG } from './types'
 import { generateProject } from './generators/projectGenerator'
 import { FileTreeModal } from './components/FileTreeModal'
@@ -59,6 +59,30 @@ const VALIDATION_OPTIONS: { value: Validation; label: string; icon: string; desc
   { value: 'yup',     label: 'Yup',     icon: 'javascript', desc: 'Classic · Works with Formik' },
   { value: 'valibot', label: 'Valibot', icon: 'javascript', desc: 'Lightweight Zod alternative' },
   { value: 'none',    label: 'None',    icon: '',           desc: 'No validation lib' },
+]
+
+const FORM_OPTIONS: Record<Framework, { value: FormLibrary; label: string; icon: string; desc: string }[]> = {
+  react: [
+    { value: 'react-hook-form', label: 'React Hook Form', icon: 'javascript', desc: 'Performant · Minimal re-renders' },
+    { value: 'formik',          label: 'Formik',          icon: 'javascript', desc: 'Battle-tested · Simple API' },
+    { value: 'none',            label: 'None',            icon: '',           desc: 'No form library' },
+  ],
+  vue: [
+    { value: 'vee-validate', label: 'VeeValidate', icon: 'vuejs', desc: 'Official Vue form validation' },
+    { value: 'formik',       label: 'Formik',      icon: 'javascript', desc: 'Battle-tested · Simple API' },
+    { value: 'none',         label: 'None',        icon: '',      desc: 'No form library' },
+  ],
+  angular: [
+    { value: 'none', label: 'None', icon: '', desc: 'Use Angular Reactive Forms' },
+  ],
+}
+
+const HTTP_CLIENT_OPTIONS: { value: HttpClient; label: string; icon: string; desc: string }[] = [
+  { value: 'axios',          label: 'Axios',          icon: 'axios',      desc: 'Most popular HTTP client' },
+  { value: 'ky',             label: 'Ky',             icon: 'javascript', desc: 'Lightweight fetch wrapper' },
+  { value: 'tanstack-query', label: 'TanStack Query', icon: 'reactrouter', desc: 'Async state management' },
+  { value: 'swr',            label: 'SWR',            icon: 'javascript', desc: 'React hooks for data fetching' },
+  { value: 'none',           label: 'None',           icon: '',           desc: 'No HTTP client' },
 ]
 
 const STYLING_OPTIONS: Record<Framework, { value: Styling; label: string; icon: string; desc: string }[]> = {
@@ -220,6 +244,8 @@ function SummaryPanel({
     { label: 'Linting',     value: cfg.linting },
     { label: 'Testing',     value: cfg.testing },
     { label: 'Validation',  value: cfg.validation },
+    { label: 'HTTP Client', value: cfg.httpClient },
+    { label: 'Form Library', value: cfg.formLibrary },
   ]
 
   const pm         = cfg.packageManager
@@ -332,6 +358,7 @@ export default function App() {
         next.styling         = STYLING_OPTIONS[fw][0].value
         next.routing         = ROUTING_OPTIONS[fw][0].value
         next.stateManagement = STATE_OPTIONS[fw][0].value
+        next.formLibrary = FORM_OPTIONS[fw][0].value
       }
       // prevent selecting coming-soon build tools
       if (key === 'buildTool') {
@@ -561,6 +588,32 @@ export default function App() {
                   <DevIcon name={v.icon} size={24} />
                   <div className="font-semibold text-sm mt-2 mb-0.5" style={{ color: '#f1f5f9' }}>{v.label}</div>
                   <div className="text-xs" style={{ color: T.muted }}>{v.desc}</div>
+                </OptionCard>
+              ))}
+            </div>
+          </Section>
+
+          {/* Step 11 — HTTP Client */}
+          <Section step={11} icon={<Globe size={13} />} title="HTTP Client">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {HTTP_CLIENT_OPTIONS.map(h => (
+                <OptionCard key={h.value} selected={cfg.httpClient === h.value} onClick={() => set('httpClient', h.value)}>
+                  <DevIcon name={h.icon} size={24} />
+                  <div className="font-semibold text-sm mt-2 mb-0.5" style={{ color: '#f1f5f9' }}>{h.label}</div>
+                  <div className="text-xs" style={{ color: T.muted }}>{h.desc}</div>
+                </OptionCard>
+              ))}
+            </div>
+          </Section>
+
+          {/* Step 12 — Form Library */}
+          <Section step={12} icon={<ClipboardList size={13} />} title="Form Library">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {FORM_OPTIONS[cfg.framework].map(f => (
+                <OptionCard key={f.value} selected={cfg.formLibrary === f.value} onClick={() => set('formLibrary', f.value)}>
+                  <DevIcon name={f.icon} size={24} />
+                  <div className="font-semibold text-sm mt-2 mb-0.5" style={{ color: '#f1f5f9' }}>{f.label}</div>
+                  <div className="text-xs" style={{ color: T.muted }}>{f.desc}</div>
                 </OptionCard>
               ))}
             </div>

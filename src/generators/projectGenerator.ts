@@ -9,7 +9,7 @@ const extx = (ts: boolean) => (ts ? 'tsx' : 'jsx')
 // ── package.json ─────────────────────────────────────────────────────────────
 
 function buildPackageJson(cfg: ProjectConfig): string {
-  const { projectName, buildTool, framework, styling, typescript, routing, stateManagement, linting, testing, validation } = cfg
+  const { projectName, buildTool, framework, styling, typescript, routing, stateManagement, linting, testing, validation, httpClient, formLibrary } = cfg
 
   const deps: Record<string, string> = {}
   const devDeps: Record<string, string> = {}
@@ -102,6 +102,30 @@ function buildPackageJson(cfg: ProjectConfig): string {
   if (validation === 'zod')      deps['zod']      = '^3.23.8'
   if (validation === 'yup')      deps['yup']      = '^1.4.0'
   if (validation === 'valibot')  deps['valibot']  = '^0.31.0'
+
+  // HTTP Client
+  if (httpClient === 'axios')          deps['axios']                  = '^1.7.2'
+  if (httpClient === 'ky')             deps['ky']                     = '^1.3.0'
+  if (httpClient === 'tanstack-query') {
+    deps['@tanstack/react-query']      = '^5.51.1'
+    devDeps['@tanstack/react-query-devtools'] = '^5.51.1'
+  }
+  if (httpClient === 'swr')            deps['swr']                    = '^2.2.5'
+
+  // Form Library
+  if (formLibrary === 'react-hook-form') {
+    deps['react-hook-form'] = '^7.52.1'
+    if (validation === 'zod') deps['@hookform/resolvers'] = '^3.9.0'
+  }
+  if (formLibrary === 'formik') {
+    deps['formik'] = '^2.4.6'
+    if (validation === 'yup') deps['yup'] = '^1.4.0'
+  }
+  if (formLibrary === 'vee-validate') {
+    deps['vee-validate'] = '^4.13.2'
+    if (validation === 'yup') deps['@vee-validate/yup'] = '^4.13.2'
+    if (validation === 'zod') deps['@vee-validate/zod'] = '^4.13.2'
+  }
 
   const scripts: Record<string, string> =
     framework === 'angular'
@@ -609,6 +633,27 @@ export async function generateProject(cfg: ProjectConfig): Promise<Blob> {
     if (cfg.validation === 'valibot') schemas.file(`userSchema.${ts ? 'ts' : 'js'}`, buildValibotSchema(ts))
   }
 
+  // HTTP Client
+  if (cfg.httpClient !== 'none') {
+    const api = src.folder('api')!
+    const ts = cfg.typescript
+    const ext = ts ? 'ts' : 'js'
+    if (cfg.httpClient === 'axios')          api.file(`client.${ext}`, buildAxiosClient(ts))
+    if (cfg.httpClient === 'ky')             api.file(`client.${ext}`, buildKyClient(ts))
+    if (cfg.httpClient === 'tanstack-query') api.file(`queryClient.${ext}`, buildTanstackQuerySetup(ts))
+    if (cfg.httpClient === 'swr')            api.file(`fetcher.${ext}`, buildSwrSetup(ts))
+  }
+
+  // Form Library
+  if (cfg.formLibrary !== 'none') {
+    const forms = src.folder('components')!
+    const ts = cfg.typescript
+    const ext = ts ? (cfg.framework === 'vue' ? 'vue' : 'tsx') : (cfg.framework === 'vue' ? 'vue' : 'jsx')
+    if (cfg.formLibrary === 'react-hook-form') forms.file(`ExampleForm.${ext}`, buildReactHookForm(ts, cfg.validation))
+    if (cfg.formLibrary === 'formik')          forms.file(`ExampleForm.${ext}`, buildFormik(ts, cfg.validation))
+    if (cfg.formLibrary === 'vee-validate')    forms.file('ExampleForm.vue', buildVeeValidate(ts, cfg.validation))
+  }
+
   // Linting
   if (cfg.linting === 'eslint' || cfg.linting === 'eslint+prettier') {
     root.file('.eslintrc.cjs', buildEslintConfig(cfg))
@@ -788,5 +833,191 @@ export const userSchema = object({
 })
 
 ${typescript ? 'export type User = InferOutput<typeof userSchema>' : ''}
+`
+}
+
+// ── http client examples ──────────────────────────────────────────────────────
+
+function buildAxiosClient(_typescript: boolean): string {
+  return `import axios from 'axios'
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL ?? '/api',
+  headers: { 'Content-Type': 'application/json' },
+})
+
+// Request interceptor — attach auth token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token')
+  if (token) config.headers.Authorization = \`Bearer \${token}\`
+  return config
+})
+
+// Response interceptor — handle errors globally
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // handle unauthorized
+    }
+    return Promise.reject(error)
+  }
+)
+
+export default api
+`
+}
+
+function buildKyClient(_typescript: boolean): string {
+  return `import ky from 'ky'
+
+const api = ky.create({
+  prefixUrl: import.meta.env.VITE_API_URL ?? '/api',
+  headers: { 'Content-Type': 'application/json' },
+  hooks: {
+    beforeRequest: [
+      (request) => {
+        const token = localStorage.getItem('token')
+        if (token) request.headers.set('Authorization', \`Bearer \${token}\`)
+      },
+    ],
+  },
+})
+
+export default api
+`
+}
+
+function buildTanstackQuerySetup(typescript: boolean): string {
+  return `import { QueryClient } from '@tanstack/react-query'
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+})
+
+// Example query hook
+${typescript ? "export interface Post { id: number; title: string; body: string }" : ""}
+export const postsQuery = {
+  queryKey: ['posts'],
+  queryFn: async () => {
+    const res = await fetch(\`\${import.meta.env.VITE_API_URL ?? '/api'}/posts\`)
+    if (!res.ok) throw new Error('Failed to fetch posts')
+    return res.json()${typescript ? ' as Promise<Post[]>' : ''}
+  },
+}
+`
+}
+
+function buildSwrSetup(typescript: boolean): string {
+  return `import useSWR from 'swr'
+
+const fetcher = (url${typescript ? ': string' : ''}) =>
+  fetch(url).then((res) => {
+    if (!res.ok) throw new Error('Failed to fetch')
+    return res.json()
+  })
+
+// Example SWR hook
+export function usePosts() {
+  const { data, error, isLoading } = useSWR(
+    \`\${import.meta.env.VITE_API_URL ?? '/api'}/posts\`,
+    fetcher
+  )
+  return { posts: data, error, isLoading }
+}
+`
+}
+
+// ── form library examples ─────────────────────────────────────────────────────
+
+function buildReactHookForm(typescript: boolean, validation: string): string {
+  const hasZod = validation === 'zod'
+  return `import { useForm${hasZod ? ", SubmitHandler" : ""} } from 'react-hook-form'
+${hasZod ? "import { zodResolver } from '@hookform/resolvers/zod'\nimport { userSchema } from '../schemas/userSchema'" : ""}
+${typescript && hasZod ? "import type { z } from 'zod'\ntype FormData = z.infer<typeof userSchema>" : typescript ? "\ninterface FormData {\n  name: string\n  email: string\n}" : ""}
+
+export function ExampleForm() {
+  const { register, handleSubmit, formState: { errors } } = useForm${typescript && hasZod ? '<FormData>' : typescript ? '<FormData>' : ''}(${hasZod ? "{\n    resolver: zodResolver(userSchema),\n  }" : ""})
+
+  const onSubmit${typescript ? ': SubmitHandler<FormData>' : ''} = (data) => {
+    console.log(data)
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <input {...register('name')} placeholder="Name" />
+      {errors.name && <span>{errors.name.message}</span>}
+
+      <input {...register('email')} placeholder="Email" />
+      {errors.email && <span>{errors.email.message}</span>}
+
+      <button type="submit">Submit</button>
+    </form>
+  )
+}
+`
+}
+
+function buildFormik(typescript: boolean, validation: string): string {
+  const hasYup = validation === 'yup'
+  return `import { Formik, Form, Field, ErrorMessage } from 'formik'
+${hasYup ? "import { userSchema } from '../schemas/userSchema'" : ""}
+
+${typescript ? `interface FormValues {
+  name: string
+  email: string
+}` : ""}
+
+const initialValues${typescript ? ': FormValues' : ''} = { name: '', email: '' }
+
+export function ExampleForm() {
+  return (
+    <Formik
+      initialValues={initialValues}
+      ${hasYup ? "validationSchema={userSchema}" : ""}
+      onSubmit={(values) => console.log(values)}
+    >
+      <Form>
+        <Field name="name" placeholder="Name" />
+        <ErrorMessage name="name" component="span" />
+
+        <Field name="email" placeholder="Email" />
+        <ErrorMessage name="email" component="span" />
+
+        <button type="submit">Submit</button>
+      </Form>
+    </Formik>
+  )
+}
+`
+}
+
+function buildVeeValidate(typescript: boolean, validation: string): string {
+  const hasYup = validation === 'yup'
+  return `<template>
+  <Form @submit="onSubmit"${hasYup ? ' :validation-schema="schema"' : ''}>
+    <Field name="name" placeholder="Name" />
+    <ErrorMessage name="name" />
+
+    <Field name="email" placeholder="Email" />
+    <ErrorMessage name="email" />
+
+    <button type="submit">Submit</button>
+  </Form>
+</template>
+
+<script setup${typescript ? ' lang="ts"' : ''}>
+import { Form, Field, ErrorMessage } from 'vee-validate'
+${hasYup ? "import { userSchema as schema } from '../schemas/userSchema'" : ""}
+
+const onSubmit = (values${typescript ? ': Record<string, string>' : ''}) => {
+  console.log(values)
+}
+</script>
 `
 }

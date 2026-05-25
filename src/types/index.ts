@@ -7,6 +7,8 @@ export type PackageManager = 'npm' | 'pnpm' | 'yarn'
 export type Linting = 'eslint' | 'eslint+prettier' | 'none'
 export type Testing = 'vitest' | 'jest' | 'cypress' | 'none'
 export type Validation = 'zod' | 'yup' | 'valibot' | 'none'
+export type HttpClient = 'axios' | 'ky' | 'tanstack-query' | 'swr' | 'none'
+export type FormLibrary = 'react-hook-form' | 'formik' | 'vee-validate' | 'none'
 
 export interface ProjectConfig {
   projectName: string
@@ -20,6 +22,8 @@ export interface ProjectConfig {
   linting: Linting
   testing: Testing
   validation: Validation
+  httpClient: HttpClient
+  formLibrary: FormLibrary
 }
 
 export const DEFAULT_CONFIG: ProjectConfig = {
@@ -34,4 +38,6 @@ export const DEFAULT_CONFIG: ProjectConfig = {
   linting: 'eslint+prettier',
   testing: 'vitest',
   validation: 'zod',
+  httpClient: 'axios',
+  formLibrary: 'react-hook-form',
 }
