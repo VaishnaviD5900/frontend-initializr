@@ -1,33 +1,34 @@
 import JSZip from 'jszip'
 import type { ProjectConfig } from '../types'
 
-// ── helpers ──────────────────────────────────────────────────────────────────
+// ── helpers ───────────────────────────────────────────────────────────────────
 
-const ext = (ts: boolean) => (ts ? 'ts' : 'js')
-const extx = (ts: boolean) => (ts ? 'tsx' : 'jsx')
+const ext  = (ts: boolean) => ts ? 'ts'  : 'js'
+const extx = (ts: boolean) => ts ? 'tsx' : 'jsx'
 
-// ── package.json ─────────────────────────────────────────────────────────────
+// ── package.json ──────────────────────────────────────────────────────────────
 
 function buildPackageJson(cfg: ProjectConfig): string {
-  const { projectName, buildTool, framework, styling, typescript, routing, stateManagement, linting, testing, validation, httpClient, formLibrary } = cfg
+  const { projectName, buildTool, framework, styling, typescript, routing,
+          stateManagement, linting, testing, validation, httpClient, formLibrary } = cfg
 
-  const deps: Record<string, string> = {}
+  const deps: Record<string, string>    = {}
   const devDeps: Record<string, string> = {}
 
   // Framework
   if (framework === 'react') {
-    deps['react'] = '^18.3.1'
+    deps['react']     = '^18.3.1'
     deps['react-dom'] = '^18.3.1'
     devDeps['@vitejs/plugin-react'] = '^4.3.1'
-    devDeps['vite'] = '^5.3.1'
+    devDeps['vite']                 = '^5.3.1'
     if (typescript) {
-      devDeps['@types/react'] = '^18.3.1'
+      devDeps['@types/react']     = '^18.3.1'
       devDeps['@types/react-dom'] = '^18.3.1'
     }
   } else if (framework === 'vue') {
     deps['vue'] = '^3.4.29'
     devDeps['@vitejs/plugin-vue'] = '^5.0.5'
-    devDeps['vite'] = '^5.3.1'
+    devDeps['vite']               = '^5.3.1'
     if (typescript) devDeps['vue-tsc'] = '^2.0.21'
   }
 
@@ -35,82 +36,94 @@ function buildPackageJson(cfg: ProjectConfig): string {
   if (styling === 'tailwind') {
     devDeps['tailwindcss'] = '^3.4.4'
     devDeps['autoprefixer'] = '^10.4.19'
-    devDeps['postcss'] = '^8.4.38'
+    devDeps['postcss']      = '^8.4.38'
   } else if (styling === 'mui') {
-    deps['@mui/material'] = '^5.16.0'
-    deps['@emotion/react'] = '^11.11.4'
-    deps['@emotion/styled'] = '^11.11.5'
+    deps['@mui/material']    = '^5.16.0'
+    deps['@emotion/react']   = '^11.11.4'
+    deps['@emotion/styled']  = '^11.11.5'
+    if (typescript) devDeps['@types/react'] = '^18.3.1'
   } else if (styling === 'vuetify') {
-    deps['vuetify'] = '^3.6.11'
+    deps['vuetify']   = '^3.6.11'
     deps['@mdi/font'] = '^7.4.47'
+    devDeps['vite-plugin-vuetify'] = '^2.0.3'
   }
 
   // Routing
-  if (routing === 'react-router') deps['react-router-dom'] = '^6.24.0'
-  if (routing === 'tanstack-router') deps['@tanstack/react-router'] = '^1.40.0'
-  if (routing === 'vue-router') deps['vue-router'] = '^4.3.3'
+  if (routing === 'react-router')    deps['react-router-dom']       = '^6.24.0'
+  if (routing === 'tanstack-router') deps['@tanstack/react-router']  = '^1.40.0'
+  if (routing === 'vue-router')      deps['vue-router']              = '^4.3.3'
 
   // State
   if (stateManagement === 'zustand') deps['zustand'] = '^4.5.4'
   if (stateManagement === 'redux') {
     deps['@reduxjs/toolkit'] = '^2.2.6'
-    deps['react-redux'] = '^9.1.2'
+    deps['react-redux']      = '^9.1.2'
+    if (typescript) devDeps['@types/react-redux'] = '^7.1.33'
   }
   if (stateManagement === 'pinia') deps['pinia'] = '^2.1.7'
 
   // TypeScript
-  if (typescript) {
-    devDeps['typescript'] = '^5.4.5'
-  }
+  if (typescript) devDeps['typescript'] = '^5.4.5'
 
   // Linting
   if (linting === 'eslint' || linting === 'eslint+prettier') {
     devDeps['eslint'] = '^8.57.0'
-    if (typescript) devDeps['@typescript-eslint/eslint-plugin'] = '^7.0.0'
-    if (typescript) devDeps['@typescript-eslint/parser'] = '^7.0.0'
-    if (framework === 'react') devDeps['eslint-plugin-react'] = '^7.34.0'
-    if (framework === 'react') devDeps['eslint-plugin-react-hooks'] = '^4.6.2'
+    if (typescript) {
+      devDeps['@typescript-eslint/eslint-plugin'] = '^7.0.0'
+      devDeps['@typescript-eslint/parser']        = '^7.0.0'
+    }
+    if (framework === 'react') {
+      devDeps['eslint-plugin-react']       = '^7.34.0'
+      devDeps['eslint-plugin-react-hooks'] = '^4.6.2'
+    }
     if (framework === 'vue') devDeps['eslint-plugin-vue'] = '^9.26.0'
   }
   if (linting === 'eslint+prettier') {
-    devDeps['prettier'] = '^3.3.2'
+    devDeps['prettier']               = '^3.3.2'
     devDeps['eslint-config-prettier'] = '^9.1.0'
     devDeps['eslint-plugin-prettier'] = '^5.1.3'
   }
 
   // Testing
   if (testing === 'vitest') {
-    devDeps['vitest'] = '^1.6.0'
-    devDeps['@vitest/ui'] = '^1.6.0'
-    devDeps['jsdom'] = '^24.1.0'
-    if (framework === 'react') devDeps['@testing-library/react'] = '^16.0.0'
+    devDeps['vitest']        = '^1.6.0'
+    devDeps['@vitest/ui']    = '^1.6.0'
+    devDeps['jsdom']         = '^24.1.0'
+    devDeps['@vitest/coverage-v8'] = '^1.6.0'
+    if (framework === 'react') {
+      devDeps['@testing-library/react']       = '^16.0.0'
+      devDeps['@testing-library/jest-dom']    = '^6.4.6'
+      devDeps['@testing-library/user-event']  = '^14.5.2'
+    }
     if (framework === 'vue') devDeps['@testing-library/vue'] = '^8.1.0'
   }
   if (testing === 'jest') {
-    devDeps['jest'] = '^29.7.0'
+    devDeps['jest']                  = '^29.7.0'
     devDeps['jest-environment-jsdom'] = '^29.7.0'
-    if (typescript) devDeps['ts-jest'] = '^29.1.5'
-    if (typescript) devDeps['@types/jest'] = '^29.5.12'
-    if (framework === 'react') devDeps['@testing-library/react'] = '^16.0.0'
-    if (framework === 'react') devDeps['@testing-library/jest-dom'] = '^6.4.6'
+    if (typescript) {
+      devDeps['ts-jest']      = '^29.1.5'
+      devDeps['@types/jest']  = '^29.5.12'
+    }
+    if (framework === 'react') {
+      devDeps['@testing-library/react']    = '^16.0.0'
+      devDeps['@testing-library/jest-dom'] = '^6.4.6'
+    }
   }
-  if (testing === 'cypress') {
-    devDeps['cypress'] = '^13.13.0'
-  }
+  if (testing === 'cypress') devDeps['cypress'] = '^13.13.0'
 
   // Validation
-  if (validation === 'zod')      deps['zod']      = '^3.23.8'
-  if (validation === 'yup')      deps['yup']      = '^1.4.0'
-  if (validation === 'valibot')  deps['valibot']  = '^0.31.0'
+  if (validation === 'zod')     deps['zod']     = '^3.23.8'
+  if (validation === 'yup')     deps['yup']     = '^1.4.0'
+  if (validation === 'valibot') deps['valibot'] = '^0.31.0'
 
   // HTTP Client
-  if (httpClient === 'axios')          deps['axios']                  = '^1.7.2'
-  if (httpClient === 'ky')             deps['ky']                     = '^1.3.0'
+  if (httpClient === 'axios')          deps['axios']                 = '^1.7.2'
+  if (httpClient === 'ky')             deps['ky']                    = '^1.3.0'
   if (httpClient === 'tanstack-query') {
-    deps['@tanstack/react-query']      = '^5.51.1'
-    devDeps['@tanstack/react-query-devtools'] = '^5.51.1'
+    deps['@tanstack/react-query']                = '^5.51.1'
+    devDeps['@tanstack/react-query-devtools']    = '^5.51.1'
   }
-  if (httpClient === 'swr')            deps['swr']                    = '^2.2.5'
+  if (httpClient === 'swr') deps['swr'] = '^2.2.5'
 
   // Form Library
   if (formLibrary === 'react-hook-form') {
@@ -119,7 +132,6 @@ function buildPackageJson(cfg: ProjectConfig): string {
   }
   if (formLibrary === 'formik') {
     deps['formik'] = '^2.4.6'
-    if (validation === 'yup') deps['yup'] = '^1.4.0'
   }
   if (formLibrary === 'vee-validate') {
     deps['vee-validate'] = '^4.13.2'
@@ -131,65 +143,75 @@ function buildPackageJson(cfg: ProjectConfig): string {
     framework === 'angular'
       ? { dev: 'ng serve', build: 'ng build', test: 'ng test' }
       : buildTool === 'webpack'
-      ? {
-          dev: 'webpack serve',
-          build: 'webpack --mode production',
-        }
+      ? { dev: 'webpack serve', build: 'webpack --mode production' }
       : buildTool === 'parcel'
-      ? {
-          dev: 'parcel src/index.html',
-          build: 'parcel build src/index.html',
-        }
+      ? { dev: 'parcel src/index.html', build: 'parcel build src/index.html' }
       : {
           dev: 'vite',
-          build: typescript && framework !== 'vue' ? 'tsc && vite build' : framework === 'vue' && typescript ? 'vue-tsc && vite build' : 'vite build',
+          build: typescript && framework !== 'vue'
+            ? 'tsc && vite build'
+            : framework === 'vue' && typescript
+            ? 'vue-tsc && vite build'
+            : 'vite build',
           preview: 'vite preview',
-          ...(linting !== 'none' ? { lint: 'eslint src --ext .ts,.tsx,.js,.jsx,.vue' } : {}),
-          ...(testing === 'vitest' ? { test: 'vitest', 'test:ui': 'vitest --ui' } : {}),
-          ...(testing === 'jest' ? { test: 'jest' } : {}),
-          ...(testing === 'cypress' ? { 'test:e2e': 'cypress open' } : {}),
+          ...(linting !== 'none'          ? { lint: 'eslint src --ext .ts,.tsx,.js,.jsx,.vue' } : {}),
+          ...(testing === 'vitest'        ? { test: 'vitest', 'test:ui': 'vitest --ui' }        : {}),
+          ...(testing === 'jest'          ? { test: 'jest' }                                    : {}),
+          ...(testing === 'cypress'       ? { 'test:e2e': 'cypress open' }                      : {}),
         }
 
-  return JSON.stringify(
-    {
-      name: projectName,
-      version: '0.1.0',
-      private: true,
-      type: 'module',
-      scripts,
-      dependencies: deps,
-      devDependencies: devDeps,
-    },
-    null,
-    2
-  )
+  return JSON.stringify({ name: projectName, version: '0.1.0', private: true, type: 'module', scripts, dependencies: deps, devDependencies: devDeps }, null, 2)
 }
 
-// ── vite config ──────────────────────────────────────────────────────────────
+// ── vite config ───────────────────────────────────────────────────────────────
 
 function buildViteConfig(cfg: ProjectConfig): string {
-  const { framework } = cfg
+  const { framework, styling } = cfg
 
   if (framework === 'react') {
     return `import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: { '@': path.resolve(__dirname, './src') },
+  },
 })\n`
   }
   if (framework === 'vue') {
+    if (styling === 'vuetify') {
+      return `import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import vuetify from 'vite-plugin-vuetify'
+import path from 'path'
+
+export default defineConfig({
+  plugins: [
+    vue(),
+    vuetify({ autoImport: true }),
+  ],
+  resolve: {
+    alias: { '@': path.resolve(__dirname, './src') },
+  },
+})\n`
+    }
     return `import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import path from 'path'
 
 export default defineConfig({
   plugins: [vue()],
+  resolve: {
+    alias: { '@': path.resolve(__dirname, './src') },
+  },
 })\n`
   }
   return `// Angular uses angular.json — no vite config needed\n`
 }
 
-// ── tsconfig ─────────────────────────────────────────────────────────────────
+// ── tsconfig ──────────────────────────────────────────────────────────────────
 
 function buildTsConfig(cfg: ProjectConfig): string {
   const base = {
@@ -206,6 +228,7 @@ function buildTsConfig(cfg: ProjectConfig): string {
       noEmit: true,
       jsx: cfg.framework === 'react' ? 'react-jsx' : undefined,
       strict: true,
+      paths: { '@/*': ['./src/*'] },
     },
     include: ['src'],
   }
@@ -215,10 +238,10 @@ function buildTsConfig(cfg: ProjectConfig): string {
 // ── tailwind config ───────────────────────────────────────────────────────────
 
 function buildTailwindConfig(cfg: ProjectConfig): string {
-  const ext = cfg.framework === 'vue' ? 'vue' : cfg.framework === 'react' ? '{js,ts,jsx,tsx}' : 'ts'
+  const e = cfg.framework === 'vue' ? 'vue' : cfg.framework === 'react' ? '{js,ts,jsx,tsx}' : 'ts'
   return `/** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./index.html', './src/**/*.${ext}'],
+  content: ['./index.html', './src/**/*.${e}'],
   theme: {
     extend: {},
   },
@@ -226,65 +249,82 @@ export default {
 }\n`
 }
 
-// ── App component ─────────────────────────────────────────────────────────────
+// ── React App ─────────────────────────────────────────────────────────────────
 
 function buildReactApp(cfg: ProjectConfig): string {
-  const { routing } = cfg
+  const { routing, httpClient, stateManagement } = cfg
 
+  const wrappers: string[] = []
+  const imports:  string[] = []
+
+  if (stateManagement === 'redux') {
+    imports.push("import { Provider } from 'react-redux'")
+    imports.push("import { store } from '@/store/store'")
+    wrappers.push('Provider store={store}')
+  }
+  if (httpClient === 'tanstack-query') {
+    imports.push("import { QueryClientProvider } from '@tanstack/react-query'")
+    imports.push("import { ReactQueryDevtools } from '@tanstack/react-query-devtools'")
+    imports.push("import { queryClient } from '@/api/queryClient'")
+    wrappers.push('QueryClientProvider client={queryClient}')
+  }
+
+  const buildJSX = (inner: string): string => {
+    let result = inner
+    for (const w of [...wrappers].reverse()) {
+      const tag = w.split(' ')[0]
+      result = `<${w}>\n      ${result}\n      </${tag}>`
+    }
+    // append devtools inside QueryClientProvider if needed
+    if (httpClient === 'tanstack-query') {
+      result = result.replace('</QueryClientProvider>', '  <ReactQueryDevtools initialIsOpen={false} />\n      </QueryClientProvider>')
+    }
+    return result
+  }
+
+  let routerContent = ''
   if (routing === 'react-router') {
-    return `import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Home from './pages/Home'
-
-function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-      </Routes>
-    </BrowserRouter>
-  )
-}
-
-export default App\n`
+    imports.push("import { BrowserRouter, Routes, Route } from 'react-router-dom'")
+    imports.push("import Home from '@/pages/Home'")
+    routerContent = buildJSX(`<BrowserRouter>\n        <Routes>\n          <Route path="/" element={<Home />} />\n        </Routes>\n      </BrowserRouter>`)
+  } else if (routing === 'tanstack-router') {
+    imports.push("import { RouterProvider, createRouter } from '@tanstack/react-router'")
+    imports.push("import { routeTree } from './routeTree.gen'")
+    routerContent = buildJSX(`<RouterProvider router={router} />`)
+  } else {
+    imports.push("import Home from '@/pages/Home'")
+    routerContent = buildJSX(`<Home />`)
   }
 
-  if (routing === 'tanstack-router') {
-    return `import { RouterProvider, createRouter } from '@tanstack/react-router'
-import { routeTree } from './routeTree.gen'
-
+  const tanstackRouterSetup = routing === 'tanstack-router' ? `
 const router = createRouter({ routeTree })
-
 declare module '@tanstack/react-router' {
-  interface Register {
-    router: typeof router
-  }
+  interface Register { router: typeof router }
 }
+` : ''
 
+  return `${imports.join('\n')}
+
+${tanstackRouterSetup}
 function App() {
-  return <RouterProvider router={router} />
-}
-
-export default App\n`
-  }
-
-  return `function App() {
   return (
-    <div>
-      <h1>Hello from your new app!</h1>
-    </div>
+    ${routerContent}
   )
 }
 
 export default App\n`
 }
+
+// ── Vue App ───────────────────────────────────────────────────────────────────
 
 function buildVueApp(cfg: ProjectConfig): string {
-  if (cfg.routing === 'vue-router') {
+  const { routing, typescript: ts } = cfg
+  if (routing === 'vue-router') {
     return `<template>
   <RouterView />
 </template>
 
-<script setup${cfg.typescript ? ' lang="ts"' : ''}>
+<script setup${ts ? ' lang="ts"' : ''}>
 import { RouterView } from 'vue-router'
 </script>\n`
   }
@@ -294,14 +334,14 @@ import { RouterView } from 'vue-router'
   </div>
 </template>
 
-<script setup${cfg.typescript ? ' lang="ts"' : ''}>
+<script setup${ts ? ' lang="ts"' : ''}>
 </script>\n`
 }
 
 // ── Home page ─────────────────────────────────────────────────────────────────
 
 function buildReactHomePage(cfg: ProjectConfig): string {
-  return `function Home() {
+  return `const Home = () => {
   return (
     <main>
       <h1>Welcome to ${cfg.projectName}</h1>
@@ -323,7 +363,7 @@ function buildVueHomePage(cfg: ProjectConfig): string {
 </script>\n`
 }
 
-// ── store ─────────────────────────────────────────────────────────────────────
+// ── Store ─────────────────────────────────────────────────────────────────────
 
 function buildZustandStore(typescript: boolean): string {
   if (typescript) {
@@ -394,25 +434,31 @@ export const useAppStore = defineStore('app', {
 })\n`
 }
 
-// ── main entry ───────────────────────────────────────────────────────────────
+// ── React main.tsx ────────────────────────────────────────────────────────────
 
 function buildReactMain(cfg: ProjectConfig): string {
-  const { styling, stateManagement } = cfg
-  const lines: string[] = ["import React from 'react'", "import ReactDOM from 'react-dom/client'", "import App from './App'"]
-
-  if (styling === 'tailwind') lines.push("import './index.css'")
-  if (stateManagement === 'redux') {
-    lines.push("import { Provider } from 'react-redux'")
-    lines.push("import { store } from './store/store'")
+  const { styling } = cfg
+  const lines: string[] = [
+    "import React from 'react'",
+    "import ReactDOM from 'react-dom/client'",
+    "import App from './App'",
+  ]
+  if (styling === 'tailwind' || styling === 'css') lines.push("import './index.css'")
+  if (styling === 'mui') {
+    lines.push("import { ThemeProvider, createTheme, CssBaseline } from '@mui/material'")
   }
 
   lines.push('')
-  if (stateManagement === 'redux') {
+
+  if (styling === 'mui') {
+    lines.push(`const theme = createTheme()`)
+    lines.push('')
     lines.push(`ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <Provider store={store}>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
       <App />
-    </Provider>
+    </ThemeProvider>
   </React.StrictMode>
 )`)
   } else {
@@ -426,38 +472,38 @@ function buildReactMain(cfg: ProjectConfig): string {
   return lines.join('\n') + '\n'
 }
 
+// ── Vue main.ts ───────────────────────────────────────────────────────────────
+
 function buildVueMain(cfg: ProjectConfig): string {
   const { styling, stateManagement, routing } = cfg
-  const lines: string[] = ["import { createApp } from 'vue'", "import App from './App.vue'"]
+  const lines: string[] = [
+    "import { createApp } from 'vue'",
+    "import App from './App.vue'",
+  ]
 
-  if (routing === 'vue-router') lines.push("import router from './router'")
-  if (stateManagement === 'pinia') lines.push("import { createPinia } from 'pinia'")
-  if (styling === 'tailwind') lines.push("import './index.css'")
+  if (routing === 'vue-router')      lines.push("import router from './router'")
+  if (stateManagement === 'pinia')   lines.push("import { createPinia } from 'pinia'")
+  if (styling === 'tailwind')        lines.push("import './index.css'")
   if (styling === 'vuetify') {
     lines.push("import 'vuetify/styles'")
-    lines.push("import { createVuetify } from 'vuetify'")
-    lines.push("import * as components from 'vuetify/components'")
-    lines.push("import * as directives from 'vuetify/directives'")
+    lines.push("import '@mdi/font/css/materialdesignicons.css'")
   }
 
   lines.push('')
   lines.push('const app = createApp(App)')
-  if (styling === 'vuetify') {
-    lines.push('const vuetify = createVuetify({ components, directives })')
-    lines.push('app.use(vuetify)')
-  }
-  if (routing === 'vue-router') lines.push('app.use(router)')
-  if (stateManagement === 'pinia') lines.push('app.use(createPinia())')
+  if (stateManagement === 'pinia')   lines.push('app.use(createPinia())')
+  if (routing === 'vue-router')      lines.push('app.use(router)')
+  if (styling === 'vuetify')         lines.push("// Vuetify is auto-imported via vite-plugin-vuetify")
   lines.push("app.mount('#app')")
 
   return lines.join('\n') + '\n'
 }
 
-// ── vue router ───────────────────────────────────────────────────────────────
+// ── Vue router ────────────────────────────────────────────────────────────────
 
 function buildVueRouter(_cfg: ProjectConfig): string {
   return `import { createRouter, createWebHistory } from 'vue-router'
-import Home from '../pages/Home.vue'
+import Home from '@/pages/Home.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -469,15 +515,18 @@ const router = createRouter({
 export default router\n`
 }
 
-// ── index.html ───────────────────────────────────────────────────────────────
+// ── index.html ────────────────────────────────────────────────────────────────
 
 function buildIndexHtml(cfg: ProjectConfig): string {
+  const vuetifyFont = cfg.styling === 'vuetify'
+    ? '\n    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />'
+    : ''
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${cfg.projectName}</title>
+    <title>${cfg.projectName}</title>${vuetifyFont}
   </head>
   <body>
     <div id="${cfg.framework === 'vue' ? 'app' : 'root'}"></div>
@@ -486,10 +535,14 @@ function buildIndexHtml(cfg: ProjectConfig): string {
 </html>\n`
 }
 
-// ── README ───────────────────────────────────────────────────────────────────
+// ── README ────────────────────────────────────────────────────────────────────
 
 function buildReadme(cfg: ProjectConfig): string {
-  const { projectName, buildTool, framework, styling, typescript, routing, stateManagement, packageManager } = cfg
+  const { projectName, buildTool, framework, styling, typescript, routing, stateManagement, packageManager, validation, httpClient, formLibrary, linting, testing } = cfg
+  const pm = packageManager
+  const installCmd = pm === 'yarn' ? 'yarn'        : `${pm} install`
+  const devCmd     = pm === 'yarn' ? 'yarn dev'    : `${pm} run dev`
+
   return `# ${projectName}
 
 > Generated by [Frontend Initializr](https://frontend-initializr.dev)
@@ -505,12 +558,26 @@ function buildReadme(cfg: ProjectConfig): string {
 | **Routing** | ${routing} |
 | **State** | ${stateManagement} |
 | **Package Manager** | ${packageManager} |
+| **Validation** | ${validation} |
+| **HTTP Client** | ${httpClient} |
+| **Form Library** | ${formLibrary} |
+| **Linting** | ${linting} |
+| **Testing** | ${testing} |
 
 ## Getting Started
 
 \`\`\`bash
-${packageManager} install
-${packageManager} run dev
+${installCmd}
+${devCmd}
+\`\`\`
+
+## Path Aliases
+
+Use \`@/\` to import from \`src/\`:
+
+\`\`\`ts
+import { useAppStore } from '@/store/useAppStore'
+import Home from '@/pages/Home'
 \`\`\`
 
 ## Project Structure
@@ -519,7 +586,7 @@ ${packageManager} run dev
 src/
   components/   # Reusable UI components
   pages/        # Page-level components
-  ${stateManagement !== 'none' ? 'store/         # State management\n  ' : ''}${routing !== 'none' && framework !== 'react' ? 'router/        # Route definitions\n  ' : ''}App.${typescript ? (framework === 'vue' ? 'vue' : 'tsx') : framework === 'vue' ? 'vue' : 'jsx'}
+  ${stateManagement !== 'none' ? 'store/         # State management\n  ' : ''}${routing !== 'none' && framework !== 'react' ? 'router/        # Route definitions\n  ' : ''}${httpClient !== 'none' ? 'api/           # HTTP client setup\n  ' : ''}${validation !== 'none' ? 'schemas/       # Validation schemas\n  ' : ''}App.${typescript ? (framework === 'vue' ? 'vue' : 'tsx') : framework === 'vue' ? 'vue' : 'jsx'}
   main.${typescript ? (framework === 'vue' ? 'ts' : 'tsx') : framework === 'vue' ? 'js' : 'jsx'}
 \`\`\`
 `
@@ -551,146 +618,12 @@ body {
   line-height: 1.5;
 }\n`
 
-// ── main generator ────────────────────────────────────────────────────────────
-
-export async function generateProject(cfg: ProjectConfig): Promise<Blob> {
-  const zip = new JSZip()
-  const root = zip.folder(cfg.projectName)!
-  const src = root.folder('src')!
-  const ts = cfg.typescript
-  const fw = cfg.framework
-  const e = ext(ts)
-  const ex = extx(ts)
-
-  // Root files
-  root.file('package.json', buildPackageJson(cfg))
-  root.file('.gitignore', GITIGNORE)
-  root.file('README.md', buildReadme(cfg))
-  root.file('index.html', buildIndexHtml(cfg))
-
-  if (fw !== 'angular') {
-    root.file(`vite.config.${e}`, buildViteConfig(cfg))
-    if (ts) root.file('tsconfig.json', buildTsConfig(cfg))
-    if (cfg.styling === 'tailwind') {
-      root.file('tailwind.config.js', buildTailwindConfig(cfg))
-      root.file('postcss.config.js', `export default {\n  plugins: {\n    tailwindcss: {},\n    autoprefixer: {},\n  },\n}\n`)
-    }
-  }
-
-  // src files
-  if (fw === 'react') {
-    src.file(`main.${ex}`, buildReactMain(cfg))
-    src.file(`App.${ex}`, buildReactApp(cfg))
-    src.file('index.css', cfg.styling === 'tailwind' ? TAILWIND_CSS : PLAIN_CSS)
-
-    const pages = src.folder('pages')!
-    pages.file(`Home.${ex}`, buildReactHomePage(cfg))
-
-    src.folder('components')
-
-    // Store
-    if (cfg.stateManagement === 'zustand') {
-      const store = src.folder('store')!
-      store.file(`useAppStore.${e}`, buildZustandStore(ts))
-    } else if (cfg.stateManagement === 'redux') {
-      const store = src.folder('store')!
-      store.file(`store.${e}`, buildReduxStore(ts))
-      store.file(`counterSlice.${e}`, buildReduxSlice(ts))
-    }
-  }
-
-  if (fw === 'vue') {
-    src.file(`main.${ts ? 'ts' : 'js'}`, buildVueMain(cfg))
-    src.file('App.vue', buildVueApp(cfg))
-    src.file('index.css', cfg.styling === 'tailwind' ? TAILWIND_CSS : PLAIN_CSS)
-
-    const pages = src.folder('pages')!
-    pages.file('Home.vue', buildVueHomePage(cfg))
-    src.folder('components')
-
-    if (cfg.routing === 'vue-router') {
-      const router = src.folder('router')!
-      router.file(`index.${ts ? 'ts' : 'js'}`, buildVueRouter(cfg))
-    }
-
-    if (cfg.stateManagement === 'pinia') {
-      const store = src.folder('store')!
-      store.file(`useAppStore.${ts ? 'ts' : 'js'}`, buildPiniaStore(ts))
-    }
-  }
-
-  if (fw === 'angular') {
-    // Angular uses its own CLI — provide a note
-    root.file('ANGULAR_NOTE.md', `# Angular Project\n\nRun the following to create your Angular project with the selected options:\n\n\`\`\`bash\nnpx @angular/cli new ${cfg.projectName} ${ts ? '' : '--no-strict '}--routing=${cfg.routing !== 'none'} --style=${cfg.styling === 'angular-material' ? 'scss' : 'css'}\n\`\`\`\n\nThen install Angular Material if selected:\n\`\`\`bash\nng add @angular/material\n\`\`\`\n`)
-  }
-
-  // Validation schema example
-  if (cfg.validation !== 'none') {
-    const schemas = src.folder('schemas')!
-    const ts = cfg.typescript
-    if (cfg.validation === 'zod')     schemas.file(`userSchema.${ts ? 'ts' : 'js'}`, buildZodSchema(ts))
-    if (cfg.validation === 'yup')     schemas.file(`userSchema.${ts ? 'ts' : 'js'}`, buildYupSchema())
-    if (cfg.validation === 'valibot') schemas.file(`userSchema.${ts ? 'ts' : 'js'}`, buildValibotSchema(ts))
-  }
-
-  // HTTP Client
-  if (cfg.httpClient !== 'none') {
-    const api = src.folder('api')!
-    const ts = cfg.typescript
-    const ext = ts ? 'ts' : 'js'
-    if (cfg.httpClient === 'axios')          api.file(`client.${ext}`, buildAxiosClient(ts))
-    if (cfg.httpClient === 'ky')             api.file(`client.${ext}`, buildKyClient(ts))
-    if (cfg.httpClient === 'tanstack-query') api.file(`queryClient.${ext}`, buildTanstackQuerySetup(ts))
-    if (cfg.httpClient === 'swr')            api.file(`fetcher.${ext}`, buildSwrSetup(ts))
-  }
-
-  // Form Library
-  if (cfg.formLibrary !== 'none') {
-    const forms = src.folder('components')!
-    const ts = cfg.typescript
-    const ext = ts ? (cfg.framework === 'vue' ? 'vue' : 'tsx') : (cfg.framework === 'vue' ? 'vue' : 'jsx')
-    if (cfg.formLibrary === 'react-hook-form') forms.file(`ExampleForm.${ext}`, buildReactHookForm(ts, cfg.validation))
-    if (cfg.formLibrary === 'formik')          forms.file(`ExampleForm.${ext}`, buildFormik(ts, cfg.validation))
-    if (cfg.formLibrary === 'vee-validate')    forms.file('ExampleForm.vue', buildVeeValidate(ts, cfg.validation))
-  }
-
-  // Linting
-  if (cfg.linting === 'eslint' || cfg.linting === 'eslint+prettier') {
-    root.file('.eslintrc.cjs', buildEslintConfig(cfg))
-    root.file('.eslintignore', 'dist\nnode_modules\n')
-  }
-  if (cfg.linting === 'eslint+prettier') {
-    root.file('.prettierrc', PRETTIER_CONFIG)
-    root.file('.prettierignore', PRETTIER_IGNORE)
-  }
-
-  // Testing
-  if (cfg.testing === 'vitest') {
-    root.file(`vitest.config.${e}`, buildVitestConfig(cfg))
-    const tests = src.folder('__tests__')!
-    tests.file(`example.test.${e}`, buildVitestExample(cfg))
-  }
-  if (cfg.testing === 'jest') {
-    root.file('jest.config.cjs', buildJestConfig(cfg))
-    const tests = src.folder('__tests__')!
-    tests.file(`example.test.${e}`, buildJestExample(cfg))
-  }
-  if (cfg.testing === 'cypress') {
-    root.file(`cypress.config.${e}`, buildCypressConfig(cfg))
-    const cypress = root.folder('cypress')!
-    const e2e = cypress.folder('e2e')!
-    e2e.file('home.cy.ts', buildCypressExample())
-  }
-
-  return zip.generateAsync({ type: 'blob' })
-}
-
-// ── eslint config ─────────────────────────────────────────────────────────────
+// ── ESLint ────────────────────────────────────────────────────────────────────
 
 function buildEslintConfig(cfg: ProjectConfig): string {
   const { framework, typescript } = cfg
-  const plugins: string[] = []
   const extendsArr: string[] = ['eslint:recommended']
+  const plugins: string[]    = []
 
   if (typescript) extendsArr.push('plugin:@typescript-eslint/recommended')
   if (framework === 'react') {
@@ -712,8 +645,6 @@ function buildEslintConfig(cfg: ProjectConfig): string {
 }\n`
 }
 
-// ── prettier config ───────────────────────────────────────────────────────────
-
 const PRETTIER_CONFIG = `{
   "semi": false,
   "singleQuote": true,
@@ -726,19 +657,30 @@ const PRETTIER_IGNORE = `dist
 node_modules
 *.min.js\n`
 
-// ── vitest config ─────────────────────────────────────────────────────────────
+// ── Testing ───────────────────────────────────────────────────────────────────
 
 function buildVitestConfig(cfg: ProjectConfig): string {
-  const { typescript } = cfg
   return `import { defineConfig } from 'vitest/config'
+import path from 'path'
+${cfg.framework === 'react' ? "import react from '@vitejs/plugin-react'" : cfg.framework === 'vue' ? "import vue from '@vitejs/plugin-vue'" : ''}
 
 export default defineConfig({
+  ${cfg.framework !== 'angular' ? `plugins: [${cfg.framework === 'react' ? 'react()' : 'vue()'}],` : ''}
   test: {
     globals: true,
     environment: 'jsdom',
-    ${typescript ? "include: ['src/**/*.{test,spec}.{ts,tsx}']," : "include: ['src/**/*.{test,spec}.{js,jsx}'],"}
+    setupFiles: ['./src/test/setup.${cfg.typescript ? 'ts' : 'js'}'],
+  },
+  resolve: {
+    alias: { '@': path.resolve(__dirname, './src') },
   },
 })\n`
+}
+
+function buildVitestSetup(cfg: ProjectConfig): string {
+  return cfg.framework === 'react'
+    ? `import '@testing-library/jest-dom'\n`
+    : `// vitest setup\n`
 }
 
 function buildVitestExample(_cfg: ProjectConfig): string {
@@ -751,8 +693,6 @@ describe('example', () => {
 })\n`
 }
 
-// ── jest config ───────────────────────────────────────────────────────────────
-
 function buildJestConfig(cfg: ProjectConfig): string {
   const { typescript, framework } = cfg
   return `/** @type {import('jest').Config} */
@@ -761,20 +701,17 @@ module.exports = {
   ${typescript ? `transform: { '^.+\\\\.(ts|tsx)$': 'ts-jest' },` : ''}
   ${framework === 'react' ? `setupFilesAfterFramework: ['@testing-library/jest-dom'],` : ''}
   testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'],
+  moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },
 }\n`
 }
 
-function buildJestExample(cfg: ProjectConfig): string {
-  const { typescript } = cfg
-  return `${typescript ? "import type { } from '@jest/globals'" : ''}
-describe('example', () => {
+function buildJestExample(_cfg: ProjectConfig): string {
+  return `describe('example', () => {
   it('should pass', () => {
     expect(1 + 1).toBe(2)
   })
 })\n`
 }
-
-// ── cypress config ────────────────────────────────────────────────────────────
 
 function buildCypressConfig(_cfg: ProjectConfig): string {
   return `import { defineConfig } from 'cypress'
@@ -797,7 +734,7 @@ function buildCypressExample(): string {
 })\n`
 }
 
-// ── validation schema examples ────────────────────────────────────────────────
+// ── Validation schemas ────────────────────────────────────────────────────────
 
 function buildZodSchema(typescript: boolean): string {
   return `import { z } from 'zod'
@@ -808,8 +745,7 @@ export const userSchema = z.object({
   age: z.number().min(18, 'Must be at least 18'),
 })
 
-${typescript ? 'export type User = z.infer<typeof userSchema>' : ''}
-`
+${typescript ? 'export type User = z.infer<typeof userSchema>' : ''}\n`
 }
 
 function buildYupSchema(): string {
@@ -819,8 +755,7 @@ export const userSchema = yup.object({
   name: yup.string().min(2, 'Name must be at least 2 characters').required(),
   email: yup.string().email('Invalid email address').required(),
   age: yup.number().min(18, 'Must be at least 18').required(),
-})
-`
+})\n`
 }
 
 function buildValibotSchema(typescript: boolean): string {
@@ -832,11 +767,10 @@ export const userSchema = object({
   age: number([minValue(18, 'Must be at least 18')]),
 })
 
-${typescript ? 'export type User = InferOutput<typeof userSchema>' : ''}
-`
+${typescript ? 'export type User = InferOutput<typeof userSchema>' : ''}\n`
 }
 
-// ── http client examples ──────────────────────────────────────────────────────
+// ── HTTP clients ──────────────────────────────────────────────────────────────
 
 function buildAxiosClient(_typescript: boolean): string {
   return `import axios from 'axios'
@@ -846,14 +780,12 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// Request interceptor — attach auth token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) config.headers.Authorization = \`Bearer \${token}\`
   return config
 })
 
-// Response interceptor — handle errors globally
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -864,8 +796,7 @@ api.interceptors.response.use(
   }
 )
 
-export default api
-`
+export default api\n`
 }
 
 function buildKyClient(_typescript: boolean): string {
@@ -884,8 +815,7 @@ const api = ky.create({
   },
 })
 
-export default api
-`
+export default api\n`
 }
 
 function buildTanstackQuerySetup(typescript: boolean): string {
@@ -894,13 +824,12 @@ function buildTanstackQuerySetup(typescript: boolean): string {
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 1000 * 60 * 5,
       retry: 1,
     },
   },
 })
 
-// Example query hook
 ${typescript ? "export interface Post { id: number; title: string; body: string }" : ""}
 export const postsQuery = {
   queryKey: ['posts'],
@@ -909,8 +838,7 @@ export const postsQuery = {
     if (!res.ok) throw new Error('Failed to fetch posts')
     return res.json()${typescript ? ' as Promise<Post[]>' : ''}
   },
-}
-`
+}\n`
 }
 
 function buildSwrSetup(typescript: boolean): string {
@@ -922,29 +850,27 @@ const fetcher = (url${typescript ? ': string' : ''}) =>
     return res.json()
   })
 
-// Example SWR hook
 export function usePosts() {
   const { data, error, isLoading } = useSWR(
     \`\${import.meta.env.VITE_API_URL ?? '/api'}/posts\`,
     fetcher
   )
   return { posts: data, error, isLoading }
-}
-`
+}\n`
 }
 
-// ── form library examples ─────────────────────────────────────────────────────
+// ── Form libraries ────────────────────────────────────────────────────────────
 
 function buildReactHookForm(typescript: boolean, validation: string): string {
   const hasZod = validation === 'zod'
-  return `import { useForm${hasZod ? ", SubmitHandler" : ""} } from 'react-hook-form'
-${hasZod ? "import { zodResolver } from '@hookform/resolvers/zod'\nimport { userSchema } from '../schemas/userSchema'" : ""}
+  return `import { useForm${hasZod && typescript ? ', SubmitHandler' : ''} } from 'react-hook-form'
+${hasZod ? "import { zodResolver } from '@hookform/resolvers/zod'\nimport { userSchema } from '@/schemas/userSchema'" : ""}
 ${typescript && hasZod ? "import type { z } from 'zod'\ntype FormData = z.infer<typeof userSchema>" : typescript ? "\ninterface FormData {\n  name: string\n  email: string\n}" : ""}
 
 export function ExampleForm() {
-  const { register, handleSubmit, formState: { errors } } = useForm${typescript && hasZod ? '<FormData>' : typescript ? '<FormData>' : ''}(${hasZod ? "{\n    resolver: zodResolver(userSchema),\n  }" : ""})
+  const { register, handleSubmit, formState: { errors } } = useForm${typescript ? '<FormData>' : ''}(${hasZod ? "{\n    resolver: zodResolver(userSchema),\n  }" : ""})
 
-  const onSubmit${typescript ? ': SubmitHandler<FormData>' : ''} = (data) => {
+  const onSubmit${typescript && hasZod ? ': SubmitHandler<FormData>' : ''} = (data) => {
     console.log(data)
   }
 
@@ -959,14 +885,13 @@ export function ExampleForm() {
       <button type="submit">Submit</button>
     </form>
   )
-}
-`
+}\n`
 }
 
 function buildFormik(typescript: boolean, validation: string): string {
   const hasYup = validation === 'yup'
   return `import { Formik, Form, Field, ErrorMessage } from 'formik'
-${hasYup ? "import { userSchema } from '../schemas/userSchema'" : ""}
+${hasYup ? "import { userSchema } from '@/schemas/userSchema'" : ""}
 
 ${typescript ? `interface FormValues {
   name: string
@@ -993,8 +918,7 @@ export function ExampleForm() {
       </Form>
     </Formik>
   )
-}
-`
+}\n`
 }
 
 function buildVeeValidate(typescript: boolean, validation: string): string {
@@ -1013,11 +937,137 @@ function buildVeeValidate(typescript: boolean, validation: string): string {
 
 <script setup${typescript ? ' lang="ts"' : ''}>
 import { Form, Field, ErrorMessage } from 'vee-validate'
-${hasYup ? "import { userSchema as schema } from '../schemas/userSchema'" : ""}
+${hasYup ? "import { userSchema as schema } from '@/schemas/userSchema'" : ""}
 
 const onSubmit = (values${typescript ? ': Record<string, string>' : ''}) => {
   console.log(values)
 }
-</script>
-`
+</script>\n`
+}
+
+// ── main generator ────────────────────────────────────────────────────────────
+
+export async function generateProject(cfg: ProjectConfig): Promise<Blob> {
+  const zip  = new JSZip()
+  const root = zip.folder(cfg.projectName)!
+  const src  = root.folder('src')!
+  const ts   = cfg.typescript
+  const fw   = cfg.framework
+  const e    = ext(ts)
+  const ex   = extx(ts)
+
+  // ── root config files ──────────────────────────────────────────────────────
+  root.file('package.json', buildPackageJson(cfg))
+  root.file('.gitignore', GITIGNORE)
+  root.file('README.md', buildReadme(cfg))
+  root.file('index.html', buildIndexHtml(cfg))
+
+  if (fw !== 'angular') {
+    root.file(`vite.config.${e}`, buildViteConfig(cfg))
+    if (ts) root.file('tsconfig.json', buildTsConfig(cfg))
+    if (cfg.styling === 'tailwind') {
+      root.file('tailwind.config.js', buildTailwindConfig(cfg))
+      root.file('postcss.config.js', `export default {\n  plugins: {\n    tailwindcss: {},\n    autoprefixer: {},\n  },\n}\n`)
+    }
+  }
+
+  // ── React ──────────────────────────────────────────────────────────────────
+  if (fw === 'react') {
+    src.file(`main.${ex}`, buildReactMain(cfg))
+    src.file(`App.${ex}`, buildReactApp(cfg))
+    if (cfg.styling === 'tailwind' || cfg.styling === 'css') {
+      src.file('index.css', cfg.styling === 'tailwind' ? TAILWIND_CSS : PLAIN_CSS)
+    }
+
+    const pages = src.folder('pages')!
+    pages.file(`Home.${ex}`, buildReactHomePage(cfg))
+
+    src.folder('components')
+
+    if (cfg.stateManagement === 'zustand') {
+      src.folder('store')!.file(`useAppStore.${e}`, buildZustandStore(ts))
+    } else if (cfg.stateManagement === 'redux') {
+      const store = src.folder('store')!
+      store.file(`store.${e}`, buildReduxStore(ts))
+      store.file(`counterSlice.${e}`, buildReduxSlice(ts))
+    }
+  }
+
+  // ── Vue ────────────────────────────────────────────────────────────────────
+  if (fw === 'vue') {
+    src.file(`main.${e}`, buildVueMain(cfg))
+    src.file('App.vue', buildVueApp(cfg))
+    if (cfg.styling === 'tailwind' || cfg.styling === 'css') {
+      src.file('index.css', cfg.styling === 'tailwind' ? TAILWIND_CSS : PLAIN_CSS)
+    }
+
+    src.folder('pages')!.file('Home.vue', buildVueHomePage(cfg))
+    src.folder('components')
+
+    if (cfg.routing === 'vue-router') {
+      src.folder('router')!.file(`index.${e}`, buildVueRouter(cfg))
+    }
+
+    if (cfg.stateManagement === 'pinia') {
+      src.folder('store')!.file(`useAppStore.${e}`, buildPiniaStore(ts))
+    }
+  }
+
+  // ── Angular stub ───────────────────────────────────────────────────────────
+  if (fw === 'angular') {
+    root.file('ANGULAR_NOTE.md', `# Angular Project\n\nRun:\n\`\`\`bash\nnpx @angular/cli new ${cfg.projectName} ${ts ? '' : '--no-strict '}--routing=${cfg.routing !== 'none'} --style=${cfg.styling === 'angular-material' ? 'scss' : 'css'}\n\`\`\`\n`)
+  }
+
+  // ── Validation ─────────────────────────────────────────────────────────────
+  if (cfg.validation !== 'none') {
+    const schemas = src.folder('schemas')!
+    if (cfg.validation === 'zod')     schemas.file(`userSchema.${e}`, buildZodSchema(ts))
+    if (cfg.validation === 'yup')     schemas.file(`userSchema.${e}`, buildYupSchema())
+    if (cfg.validation === 'valibot') schemas.file(`userSchema.${e}`, buildValibotSchema(ts))
+  }
+
+  // ── HTTP Client ────────────────────────────────────────────────────────────
+  if (cfg.httpClient !== 'none') {
+    const api = src.folder('api')!
+    if (cfg.httpClient === 'axios')          api.file(`client.${e}`, buildAxiosClient(ts))
+    if (cfg.httpClient === 'ky')             api.file(`client.${e}`, buildKyClient(ts))
+    if (cfg.httpClient === 'tanstack-query') api.file(`queryClient.${e}`, buildTanstackQuerySetup(ts))
+    if (cfg.httpClient === 'swr')            api.file(`fetcher.${e}`, buildSwrSetup(ts))
+  }
+
+  // ── Form Library ───────────────────────────────────────────────────────────
+  if (cfg.formLibrary !== 'none') {
+    const components = src.folder('components')!
+    if (cfg.formLibrary === 'react-hook-form') components.file(`ExampleForm.${ex}`, buildReactHookForm(ts, cfg.validation))
+    if (cfg.formLibrary === 'formik')          components.file(`ExampleForm.${ex}`, buildFormik(ts, cfg.validation))
+    if (cfg.formLibrary === 'vee-validate')    components.file('ExampleForm.vue', buildVeeValidate(ts, cfg.validation))
+  }
+
+  // ── Linting ────────────────────────────────────────────────────────────────
+  if (cfg.linting === 'eslint' || cfg.linting === 'eslint+prettier') {
+    root.file('.eslintrc.cjs', buildEslintConfig(cfg))
+    root.file('.eslintignore', 'dist\nnode_modules\n')
+  }
+  if (cfg.linting === 'eslint+prettier') {
+    root.file('.prettierrc', PRETTIER_CONFIG)
+    root.file('.prettierignore', PRETTIER_IGNORE)
+  }
+
+  // ── Testing ────────────────────────────────────────────────────────────────
+  if (cfg.testing === 'vitest') {
+    root.file(`vitest.config.${e}`, buildVitestConfig(cfg))
+    const testSetup = src.folder('test')!
+    testSetup.file(`setup.${e}`, buildVitestSetup(cfg))
+    src.folder('__tests__')!.file(`example.test.${e}`, buildVitestExample(cfg))
+  }
+  if (cfg.testing === 'jest') {
+    root.file('jest.config.cjs', buildJestConfig(cfg))
+    src.folder('__tests__')!.file(`example.test.${e}`, buildJestExample(cfg))
+  }
+  if (cfg.testing === 'cypress') {
+    root.file(`cypress.config.${e}`, buildCypressConfig(cfg))
+    root.folder('cypress')!.folder('e2e')!.file('home.cy.ts', buildCypressExample())
+  }
+
+  return zip.generateAsync({ type: 'blob' })
 }

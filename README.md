@@ -1,6 +1,6 @@
 # Frontend Initializr
 
-> Scaffold your frontend project in seconds — pick your stack, download a zip, start coding.
+> Scaffold your frontend project in seconds, pick your stack, download a zip, start coding.
 
 Live at: **[frontend-initializr.vercel.app](https://frontend-initializr.vercel.app)**
 
