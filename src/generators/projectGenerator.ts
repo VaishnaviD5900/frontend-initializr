@@ -154,7 +154,7 @@ function buildPackageJson(cfg: ProjectConfig): string {
             ? 'vue-tsc && vite build'
             : 'vite build',
           preview: 'vite preview',
-          ...(linting !== 'none'          ? { lint: 'eslint src --ext .ts,.tsx,.js,.jsx,.vue' } : {}),
+          ...(linting !== 'none' ? { lint: framework === 'vue' ? 'eslint src --ext .ts,.js,.vue' : 'eslint src --ext .ts,.tsx,.js,.jsx' } : {}),
           ...(testing === 'vitest'        ? { test: 'vitest', 'test:ui': 'vitest --ui' }        : {}),
           ...(testing === 'jest'          ? { test: 'jest' }                                    : {}),
           ...(testing === 'cypress'       ? { 'test:e2e': 'cypress open' }                      : {}),
