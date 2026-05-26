@@ -632,15 +632,24 @@ function buildEslintConfig(cfg: ProjectConfig): string {
   }
   if (framework === 'vue') extendsArr.push('plugin:vue/vue3-recommended')
 
+  const reactSettings = framework === 'react' ? `
+  settings: {
+    react: { version: 'detect' },
+  },` : ''
+
+  const reactRules = framework === 'react' ? `
+    'react/react-in-jsx-scope': 'off',
+    'react/prop-types': 'off',` : ''
+
   return `module.exports = {
   root: true,
   env: { browser: true, es2020: true },
   extends: [${extendsArr.map(e => `'${e}'`).join(', ')}],
   ${plugins.length ? `plugins: [${plugins.join(', ')}],` : ''}
-  ${typescript ? `parser: '${framework === 'vue' ? 'vue-eslint-parser' : '@typescript-eslint/parser'}',` : ''}
+  ${typescript ? `parser: '${framework === 'vue' ? 'vue-eslint-parser' : '@typescript-eslint/parser'}',` : ''}${reactSettings}
   rules: {
     'no-console': 'warn',
-    'no-unused-vars': 'warn',
+    'no-unused-vars': 'warn',${reactRules}
   },
 }\n`
 }
@@ -969,6 +978,11 @@ export async function generateProject(cfg: ProjectConfig): Promise<Blob> {
       root.file('tailwind.config.js', buildTailwindConfig(cfg))
       root.file('postcss.config.js', `export default {\n  plugins: {\n    tailwindcss: {},\n    autoprefixer: {},\n  },\n}\n`)
     }
+  }
+
+  // ── vite-env.d.ts (required for import.meta.env types) ────────────────────
+  if (fw !== 'angular' && ts) {
+    src.file('vite-env.d.ts', '/// <reference types="vite/client" />\n')
   }
 
   // ── React ──────────────────────────────────────────────────────────────────
