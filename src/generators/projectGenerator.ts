@@ -708,7 +708,7 @@ function buildJestConfig(cfg: ProjectConfig): string {
 module.exports = {
   testEnvironment: 'jsdom',
   ${typescript ? `transform: { '^.+\\\\.(ts|tsx)$': 'ts-jest' },` : ''}
-  ${framework === 'react' ? `setupFilesAfterFramework: ['@testing-library/jest-dom'],` : ''}
+  ${framework === 'react' ? `setupFilesAfterEnv: ['@testing-library/jest-dom'],` : ''}
   testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'],
   moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },
 }\n`
