@@ -631,6 +631,7 @@ function buildEslintConfig(cfg: ProjectConfig): string {
     extendsArr.push('plugin:react/recommended', 'plugin:react-hooks/recommended')
   }
   if (framework === 'vue') extendsArr.push('plugin:vue/vue3-recommended')
+  if (cfg.linting === 'eslint+prettier') extendsArr.push('plugin:prettier/recommended')
 
   const reactSettings = framework === 'react' ? `
   settings: {
